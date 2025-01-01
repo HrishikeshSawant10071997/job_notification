@@ -17,11 +17,11 @@ def check_updates():
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 # Logic to find job notifications (customize based on the website's HTML structure)
-                job_posts = soup.find_all('a', string="Jobs")
+                job_posts = soup.find_all('a', string="Jobs")  # Adjust based on actual content
                 if job_posts:
-                    send_email(link, "New job notification found!", job_posts)
+                    send_email(link, "New job notification found!", str(job_posts))
             else:
-                print(f"Error fetching {link}")
+                print(f"Error fetching {link}: Status Code {response.status_code}")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -45,6 +45,7 @@ def send_email(link, subject, content):
 st.title("Job Notification Tracker")
 st.header("Add websites to track job notifications")
 
+# Initialize session state for storing links
 if 'links' not in st.session_state:
     st.session_state['links'] = []
 
@@ -57,13 +58,20 @@ with st.form("add_link"):
         st.session_state['links'].append(link)
         st.success(f"Added: {link}")
 
+# Display tracked websites
 st.write("### Tracked Websites:")
 st.write(st.session_state['links'])
 
-# Schedule the scraper every hour
-schedule.every(1).hours.do(check_updates)
+# Update global links list
+links_list = st.session_state['links']
 
-# Run the schedule in a loop
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+# Schedule the scraper every hour
+if links_list:
+    schedule.every(1).hours.do(check_updates)
+
+# Run the schedule in a loop (use Streamlit's button to start the loop)
+if st.button("Start Tracking"):
+    st.write("Tracking job notifications... Leave the app running for real-time updates.")
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
